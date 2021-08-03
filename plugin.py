@@ -1,21 +1,29 @@
 import nanome
-from nanome.api import Plugin, PluginInstance
-from nanome.util import Logs
+from nanome.api import Plugin, AsyncPluginInstance
+from nanome.util import async_callback, Logs, ComplexUtils
+from nanome.util.enums import NotificationTypes
 
 
-class HelloNanomePlugin(PluginInstance):
+class AlignPlugin(AsyncPluginInstance):
 
-    def on_run(self):
-        message = "Hello Nanome!"
-        self.send_notification(nanome.util.enums.NotificationTypes.success, message)
-        Logs.message(message)
-
+    @async_callback
+    async def on_run(self):
+        complex_list = await self.request_complex_list()
+        complexes = await self.request_complexes([comp.index for comp in complex_list])
+        if len(complexes) < 2:
+            self.send_notification(NotificationTypes.error, "Requires two or more complexes.")    
+        reference = complexes[0]
+        comp = complexes[1]
+        self.send_notification(NotificationTypes.message, f"Aligning {comp.name} to {reference.name}")    
+        ComplexUtils.align_to(comp, reference)
+        await self.update_structures_deep([comp])
+        self.send_notification(NotificationTypes.success, f"Complexes aligned!")    
 
 # Create Plugin, and attach specific PluginInstance to it.
 if __name__ == "__main__":
     # Information describing the plugin
-    name = 'Hello Nanome'
-    description = "Send a notification that says `Hello Nanome`"
-    category = 'Demo'
+    name = 'Align Tool'
+    description = "Set complex matrix to be in relation to reference complex."
+    category = 'Align'
     has_advanced = False
-    Plugin.setup(name, description, category, has_advanced, HelloNanomePlugin)
+    Plugin.setup(name, description, category, has_advanced, AlignPlugin)
