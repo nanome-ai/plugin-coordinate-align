@@ -18,12 +18,3 @@ class AlignPlugin(AsyncPluginInstance):
         ComplexUtils.align_to(comp, reference)
         await self.update_structures_deep([comp])
         self.send_notification(NotificationTypes.success, f"Complexes aligned!")    
-
-# Create Plugin, and attach specific PluginInstance to it.
-if __name__ == "__main__":
-    # Information describing the plugin
-    name = 'Align Tool'
-    description = "Set complex matrix to be in relation to reference complex."
-    category = 'Align'
-    has_advanced = False
-    Plugin.setup(name, description, category, has_advanced, AlignPlugin)
