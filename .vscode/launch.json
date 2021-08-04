@@ -8,7 +8,7 @@
             "name": "run.py",
             "type": "python",
             "request": "launch",
-            "program": "align_plugin/run.py",
+            "program": "plugin_align/run.py",
             "console": "integratedTerminal",
             "args": ["-r", "-v", "-a", "nts-dev.nanome.ai", "-p", "9999"]
         }

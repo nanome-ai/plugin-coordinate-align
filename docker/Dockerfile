@@ -7,6 +7,6 @@ ARG CACHEBUST
 COPY ../requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY align_plugin/ .
+COPY plugin_align/ .
 
 CMD python run.py ${ARGS}
