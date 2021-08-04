@@ -1,4 +1,8 @@
 venv
 *.log
 *.pyc
-docker/redeploy.sh
+.vscode
+!/.vscode/launch.json
+/docker/.cachebust
+/docker/redeploy.sh
+*.log
