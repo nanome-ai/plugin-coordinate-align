@@ -28,7 +28,6 @@ class AlignMenu:
             default_reference = complex_list[0]
             default_target = complex_list[1]
 
-        complex_ddis = self.create_dropdown_items(complex_list)
         self.dd_reference.items = self.create_dropdown_items(complex_list)
         self.dd_complex.items = self.create_dropdown_items(complex_list)
 
@@ -37,6 +36,7 @@ class AlignMenu:
                 if item.complex_index == default_reference.index:
                     item.selected = True
                     break
+
         if default_target:
             for item in self.dd_complex.items:
                 if item.complex_index == default_target.index:
@@ -54,7 +54,7 @@ class AlignMenu:
             complex_ddis.append(ddi)
         return complex_ddis
 
-    @async_callback 
+    @async_callback
     async def submit_form(self, btn):
         reference_index = next(iter([
             item.complex_index
@@ -66,7 +66,17 @@ class AlignMenu:
             for item in self.dd_complex.items
             if item.selected
         ]))
+
+        default_text = "Align"
+        processing_text = "Aligning..."
+        self.btn_submit.text.value.set_all(processing_text)
+        self.btn_submit.unusable = True
+        self.plugin.update_content(self.btn_submit)
         await self.plugin.align_complexes(reference_index, target_index)
+        self.btn_submit.text.value.set_all(default_text)
+        self.btn_submit.unusable = False
+        self.plugin.update_content(self.btn_submit)
+
 
 class AlignPlugin(AsyncPluginInstance):
 
@@ -82,8 +92,9 @@ class AlignPlugin(AsyncPluginInstance):
         reference = complexes[0]
         comp = complexes[1]
         Logs.debug(f'Target Starting Position: {comp.position._positions}')
-        self.send_notification(NotificationTypes.message, f"Aligning {comp.name} to {reference.name}")    
+        self.send_notification(NotificationTypes.message, f"Aligning {comp.name} to {reference.name}")
         ComplexUtils.align_to(comp, reference)
         Logs.debug(f'Target Final Position: {comp.position._positions}')
         await self.update_structures_deep([comp])
-        self.send_notification(NotificationTypes.success, f"Complexes aligned!")    
+        self.send_notification(NotificationTypes.success, "Complexes aligned!")
+        Logs.message("Alignment Completed.")
