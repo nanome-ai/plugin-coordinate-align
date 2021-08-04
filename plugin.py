@@ -16,7 +16,7 @@ class AlignMenu():
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
         self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
-        self.dd_complex = self._menu.root.find_node('dd_complex').get_content()
+        self.dd_complex = self._menu.root.find_node('dd_target').get_content()
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
 
@@ -94,10 +94,13 @@ class AlignPlugin(AsyncPluginInstance):
         self.menu.render(complex_list)
 
     async def align_complexes(self, reference_index, target_index):
+        Logs.message("Starting Alignment.")
         complexes = await self.request_complexes([reference_index, target_index])
         reference = complexes[0]
         comp = complexes[1]
+        Logs.debug(f'Target Starting Position: {comp.position._positions}')
         self.send_notification(NotificationTypes.message, f"Aligning {comp.name} to {reference.name}")    
         ComplexUtils.align_to(comp, reference)
+        Logs.debug(f'Target Final Position: {comp.position._positions}')
         await self.update_structures_deep([comp])
         self.send_notification(NotificationTypes.success, f"Complexes aligned!")    
