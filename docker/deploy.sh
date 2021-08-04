@@ -18,6 +18,5 @@ chmod +x redeploy.sh
 docker run -d \
 --name $container_name \
 --restart unless-stopped \
--v /home/mike/workspace/plugin-align:/app \
 -e ARGS="$*" \
 $container_name

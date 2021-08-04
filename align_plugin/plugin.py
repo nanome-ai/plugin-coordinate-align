@@ -10,7 +10,7 @@ BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
 MENU_PATH = path.join(BASE_PATH, 'menu.json')
 
 
-class AlignMenu():
+class AlignMenu:
 
     def __init__(self, plugin):
         self.plugin = plugin
@@ -20,25 +20,8 @@ class AlignMenu():
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
 
-    @property
-    def index(self):
-        return self._menu.index
-
-    @index.setter
-    def index(self, value):
-        self._menu.index = value
-
-    @property
-    def enabled(self):
-        return self._menu.enabled
-
-    @enabled.setter
-    def enabled(self, value):
-        self._menu.enabled = value
-
     def render(self, complex_list):
-        self.enabled = True
-
+        self._menu.enabled = True
         default_reference = None
         default_target = None
         if len(complex_list) >= 2:
