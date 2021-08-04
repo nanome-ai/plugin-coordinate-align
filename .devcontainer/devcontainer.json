@@ -3,9 +3,19 @@
 {
 	"name": "Python 3",
 	"build": {
-		"dockerfile": "../docker/Dockerfile",
-		"context": ".."
+		"dockerfile": "Dockerfile",
+		"context": "..",
+		"args": { 
+			// Update 'VARIANT' to pick a Python version: 3, 3.6, 3.7, 3.8, 3.9
+			"VARIANT": "3",
+			// Options
+			"INSTALL_NODE": "false",
+			"NODE_VERSION": "lts/*"
+		}
 	},
+
+	// Set environment variables 
+	"runArgs": ["--env-file", ".devcontainer/devcontainer.env"],
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 
