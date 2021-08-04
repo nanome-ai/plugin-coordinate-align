@@ -2,4 +2,3 @@
 *.pyc
 docker/.cachebust
 docker/redeploy.sh
-.devcontainer/devcontainer.env
