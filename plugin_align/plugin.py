@@ -20,12 +20,20 @@ class AlignMenu:
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
 
-    def render(self, complex_list):
+    def render(self, complex_list, default_values=False):
+        """Populate complex dropdowns with complexes.
+
+        complex_list: List of shallow complexes
+        default_values: bool. If True, we want to update selected values in dropdown
+        """
         self._menu.enabled = True
         default_reference = None
         default_target = None
-        if len(complex_list) >= 2:
+
+        if default_values and len(complex_list) >= 1:
             default_reference = complex_list[0]
+
+        if default_values and len(complex_list) >= 2:
             default_target = complex_list[1]
 
         self.dd_reference.items = self.create_dropdown_items(complex_list)
@@ -43,7 +51,6 @@ class AlignMenu:
                     item.selected = True
                     break
         self.plugin.update_menu(self._menu)
-        return
 
     def create_dropdown_items(self, complexes):
         """Generate list of dropdown items corresponding to provided complexes."""
@@ -98,3 +105,17 @@ class AlignPlugin(AsyncPluginInstance):
         await self.update_structures_deep([comp])
         self.send_notification(NotificationTypes.success, "Complexes aligned!")
         Logs.message("Alignment Completed.")
+
+    @async_callback
+    async def on_complex_list_updated(self, complexes):
+        self.menu.render(complexes=complexes)
+
+    @async_callback
+    async def on_complex_added(self):
+        complexes = await self.request_complex_list()
+        await self.menu.render(complexes=complexes, default_values=True)
+
+    @async_callback
+    async def on_complex_removed(self):
+        complexes = await self.request_complex_list()
+        await self.menu.render(complexes=complexes)

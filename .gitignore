@@ -1,7 +1,5 @@
 *.log
 *.pyc
-.vscode
-!/.vscode/launch.json
-/docker/.cachebust
-/docker/redeploy.sh
+docker/.cachebust
+docker/redeploy.sh
 .devcontainer/devcontainer.env
