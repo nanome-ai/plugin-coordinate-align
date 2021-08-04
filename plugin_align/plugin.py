@@ -1,9 +1,9 @@
 import nanome
-from nanome.api import Plugin, AsyncPluginInstance
+from nanome.api import AsyncPluginInstance
 from nanome.api.ui import DropdownItem
 from nanome.util import async_callback, Logs, ComplexUtils
 from nanome.util.enums import NotificationTypes
-from os import environ, path
+from os import path
 
 
 BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
