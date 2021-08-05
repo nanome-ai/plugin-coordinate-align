@@ -1,6 +1,6 @@
 import nanome
 from nanome.api import AsyncPluginInstance
-from nanome.api.ui import DropdownItem
+from nanome.api.ui import DropdownItem, Button, LayoutNode
 from nanome.util import async_callback, Logs, ComplexUtils
 from nanome.util.enums import NotificationTypes
 from os import path
@@ -15,7 +15,7 @@ class AlignMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
-        self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
+        self.list_reference = self._menu.root.find_node('list_reference').get_content()
         self.dd_complex = self._menu.root.find_node('dd_target').get_content()
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
@@ -36,14 +36,22 @@ class AlignMenu:
         if default_values and len(complex_list) >= 2:
             default_target = complex_list[1]
 
-        self.dd_reference.items = self.create_dropdown_items(complex_list)
+        btn_list = self.create_complex_btns(complex_list)
+        for ln_btn in btn_list:
+            btn = ln_btn.get_content()
+            btn.register_pressed_callback(self.reference_complex_clicked)
+
+        self.list_reference.items = btn_list
+
+        # self.dd_reference.items = self.create_dropdown_items(complex_list)
         self.dd_complex.items = self.create_dropdown_items(complex_list)
 
         if default_reference:
-            for item in self.dd_reference.items:
-                if item.complex_index == default_reference.index:
-                    item.selected = True
-                    break
+            pass
+            # for item in self.dd_reference.items:
+            #     if item.complex_index == default_reference.index:
+            #         item.selected = True
+            #         break
 
         if default_target:
             for item in self.dd_complex.items:
@@ -51,6 +59,30 @@ class AlignMenu:
                     item.selected = True
                     break
         self.plugin.update_menu(self._menu)
+
+    def reference_complex_clicked(self, clicked_btn):
+        # Only one reference complex can be selected at a time.
+        if clicked_btn.selected:
+            for ln_btn in self.list_reference.items:
+                btn = ln_btn.get_content()
+                if btn.selected and btn._content_id != clicked_btn._content_id:
+                    btn.selected = False
+            self.plugin.update_content(self.list_reference)
+
+    def create_complex_btns(self, complex_list):
+        btn_list = []
+        for comp in complex_list:
+            new_node = LayoutNode()
+            new_node.forward_dist = 0.004
+            btn = Button()
+            btn.outline.active = False
+            btn.toggle_on_press = True
+            btn.switch.active = True
+            btn.text.value.set_all(comp.full_name)
+            btn.complex_index = comp.index
+            new_node.set_content(btn)
+            btn_list.append(new_node)
+        return btn_list
 
     def create_dropdown_items(self, complexes):
         """Generate list of dropdown items corresponding to provided complexes."""
@@ -64,9 +96,9 @@ class AlignMenu:
     @async_callback
     async def submit_form(self, btn):
         reference_index = next(iter([
-            item.complex_index
-            for item in self.dd_reference.items
-            if item.selected
+            item.get_content().complex_index
+            for item in self.list_reference.items
+            if item.get_content().selected
         ]))
         target_index = next(iter([
             item.complex_index
