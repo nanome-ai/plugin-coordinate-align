@@ -38,12 +38,10 @@ class AlignMenu:
 
         btn_list = self.create_complex_btns(complex_list)
         for ln_btn in btn_list:
-            btn = ln_btn.get_content()
+            btn = ln_btn.get_children()[0].get_content()
             btn.register_pressed_callback(self.reference_complex_clicked)
-
         self.list_reference.items = btn_list
 
-        target_btn_list = self.create_complex_btns(complex_list)
         self.list_targets.items = self.create_complex_btns(complex_list)
 
         if default_reference:
@@ -55,7 +53,7 @@ class AlignMenu:
 
         if default_target:
             for item in self.list_targets.items:
-                if item.get_content().complex_index == default_target.index:
+                if item.get_children()[0].get_content().complex_index == default_target.index:
                     item.selected = True
                     break
         self.plugin.update_menu(self._menu)
@@ -64,7 +62,7 @@ class AlignMenu:
         # Only one reference complex can be selected at a time.
         if clicked_btn.selected:
             for ln_btn in self.list_reference.items:
-                btn = ln_btn.get_content()
+                btn = ln_btn.get_children()[0].get_content()
                 if btn.selected and btn._content_id != clicked_btn._content_id:
                     btn.selected = False
             self.plugin.update_content(self.list_reference)
@@ -72,16 +70,19 @@ class AlignMenu:
     def create_complex_btns(self, complex_list):
         btn_list = []
         for comp in complex_list:
-            new_node = LayoutNode()
-            new_node.forward_dist = 0.004
+            # Slightly annoying, but to fix z-index issues,
+            # we need to add two layoutnodes around the button
+            ln = LayoutNode()
+            ln2 = ln.create_child_node()
+            ln2.forward_dist = 0.004
             btn = Button()
             btn.outline.active = False
             btn.toggle_on_press = True
             btn.switch.active = True
             btn.text.value.set_all(comp.full_name)
             btn.complex_index = comp.index
-            new_node.set_content(btn)
-            btn_list.append(new_node)
+            ln2.set_content(btn)
+            btn_list.append(ln)
         return btn_list
 
     def create_dropdown_items(self, complexes):
@@ -96,14 +97,14 @@ class AlignMenu:
     @async_callback
     async def submit_form(self, btn):
         reference_index = next(iter([
-            item.get_content().complex_index
+            item.get_children()[0].get_content().complex_index
             for item in self.list_reference.items
-            if item.get_content().selected
+            if item.get_children()[0].get_content().selected
         ]))
         target_indices = [
-            item.get_content().complex_index
+            item.get_children()[0].get_content().complex_index
             for item in self.list_targets.items
-            if item.get_content().selected
+            if item.get_children()[0].get_content().selected
         ]
 
         default_text = "Align"
@@ -143,14 +144,14 @@ class AlignPlugin(AsyncPluginInstance):
 
     @async_callback
     async def on_complex_list_updated(self, complexes):
-        self.menu.render(complexes=complexes)
+        self.menu.render(complexes)
 
     @async_callback
     async def on_complex_added(self):
         complexes = await self.request_complex_list()
-        await self.menu.render(complexes=complexes, default_values=True)
+        await self.menu.render(complexes, default_values=True)
 
     @async_callback
     async def on_complex_removed(self):
         complexes = await self.request_complex_list()
-        await self.menu.render(complexes=complexes)
+        await self.menu.render(complexes)
