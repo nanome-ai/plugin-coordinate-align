@@ -75,11 +75,7 @@ class AlignMenu:
             ln = LayoutNode()
             ln2 = ln.create_child_node()
             ln2.forward_dist = 0.004
-            btn = Button()
-            btn.outline.active = False
-            btn.toggle_on_press = True
-            btn.switch.active = True
-            btn.text.value.set_all(comp.full_name)
+            btn = ln2.add_new_toggle_switch(comp.full_name)
             btn.complex_index = comp.index
             ln2.set_content(btn)
             btn_list.append(ln)
