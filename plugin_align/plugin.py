@@ -16,7 +16,7 @@ class AlignMenu:
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
         self.list_reference = self._menu.root.find_node('list_reference').get_content()
-        self.dd_complex = self._menu.root.find_node('dd_target').get_content()
+        self.list_targets = self._menu.root.find_node('list_targets').get_content()
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
 
@@ -43,19 +43,19 @@ class AlignMenu:
 
         self.list_reference.items = btn_list
 
-        # self.dd_reference.items = self.create_dropdown_items(complex_list)
-        self.dd_complex.items = self.create_dropdown_items(complex_list)
+        target_btn_list = self.create_complex_btns(complex_list)
+        self.list_targets.items = self.create_complex_btns(complex_list)
 
         if default_reference:
             pass
             # for item in self.dd_reference.items:
             #     if item.complex_index == default_reference.index:
-            #         item.selected = True
+            #          item.selected = True
             #         break
 
         if default_target:
-            for item in self.dd_complex.items:
-                if item.complex_index == default_target.index:
+            for item in self.list_targets.items:
+                if item.get_content().complex_index == default_target.index:
                     item.selected = True
                     break
         self.plugin.update_menu(self._menu)
@@ -100,18 +100,18 @@ class AlignMenu:
             for item in self.list_reference.items
             if item.get_content().selected
         ]))
-        target_index = next(iter([
-            item.complex_index
-            for item in self.dd_complex.items
-            if item.selected
-        ]))
+        target_indices = [
+            item.get_content().complex_index
+            for item in self.list_targets.items
+            if item.get_content().selected
+        ]
 
         default_text = "Align"
         processing_text = "Aligning..."
         self.btn_submit.text.value.set_all(processing_text)
         self.btn_submit.unusable = True
         self.plugin.update_content(self.btn_submit)
-        await self.plugin.align_complexes(reference_index, target_index)
+        await self.plugin.align_complexes(reference_index, target_indices)
         self.btn_submit.text.value.set_all(default_text)
         self.btn_submit.unusable = False
         self.plugin.update_content(self.btn_submit)
@@ -125,16 +125,19 @@ class AlignPlugin(AsyncPluginInstance):
         complex_list = await self.request_complex_list()
         self.menu.render(complex_list)
 
-    async def align_complexes(self, reference_index, target_index):
+    async def align_complexes(self, reference_index, target_indices):
         Logs.message("Starting Alignment.")
-        complexes = await self.request_complexes([reference_index, target_index])
+        complexes = await self.request_complexes([reference_index, *target_indices])
         reference = complexes[0]
-        comp = complexes[1]
-        Logs.debug(f'Target Starting Position: {comp.position._positions}')
-        self.send_notification(NotificationTypes.message, f"Aligning {comp.name} to {reference.name}")
-        ComplexUtils.align_to(comp, reference)
-        Logs.debug(f'Target Final Position: {comp.position._positions}')
-        await self.update_structures_deep([comp])
+        targets = complexes[1:]
+
+        for target in targets:
+            Logs.debug(f"Aligning {target.full_name} to {reference.full_name}")
+            Logs.debug(f'{target.full_name} Starting Position: {target.position._positions}')
+            ComplexUtils.align_to(target, reference)
+            Logs.debug(f'{target.full_name} Final Position: {target.position._positions}')
+
+        await self.update_structures_deep(targets)
         self.send_notification(NotificationTypes.success, "Complexes aligned!")
         Logs.message("Alignment Completed.")
 
