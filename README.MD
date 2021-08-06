@@ -1,6 +1,6 @@
 # Nanome - Align Tool
 
-Align complex's position to be relative to another complex.
+Override the 3D local coordinate space of a complex to be relative to a reference complex 
 
 ## Dependencies
 
