@@ -110,9 +110,21 @@ class AlignMenu:
         self.btn_submit.unusable = True
         self.plugin.update_content(self.btn_submit)
         await self.plugin.align_complexes(reference_index, target_indices)
+
+        # Deselect buttons after alignment done
+        self.deselect_buttons(self.list_reference)
+        self.deselect_buttons(self.list_targets)
+        # Reset submit button text
         self.btn_submit.text.value.set_all(default_text)
         self.btn_submit.unusable = False
         self.plugin.update_content(self.btn_submit)
+
+    def deselect_buttons(self, ui_list):
+        """Deselect all buttons in the provided UIList object."""
+        btn_list = [item.get_children()[0].get_content() for item in ui_list.items]
+        for btn in btn_list:
+            btn.selected = False
+        self.plugin.update_content(ui_list)
 
 
 class AlignToolPlugin(AsyncPluginInstance):
@@ -126,8 +138,8 @@ class AlignToolPlugin(AsyncPluginInstance):
     async def align_complexes(self, reference_index, target_indices):
         Logs.message("Starting Alignment.")
         complexes = await self.request_complexes([reference_index, *target_indices])
-        reference = complexes[0]
-        targets = complexes[1:]
+        reference = next(comp for comp in complexes if comp.index == reference_index)
+        targets = [comp for comp in complexes if comp.index != reference_index]
 
         for target in targets:
             Logs.debug(f"Aligning {target.full_name} to {reference.full_name}")
