@@ -10,4 +10,4 @@
         "args": [ "--ignore", "E501", "--in-place", "${file}"]
       }
     ]
-  }
+}

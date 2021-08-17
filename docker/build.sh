@@ -15,5 +15,5 @@ if [ ! -f ".cachebust" ] || (($cachebust)); then
   date +%s > .cachebust
 fi
 
-cachebust=`cat .cachebust`
-docker build -f Dockerfile --build-arg CACHEBUST=$cachebust -t align:latest ..
+cachebust=$(cat .cachebust)
+docker build -f Dockerfile --build-arg CACHEBUST=$cachebust -t align-tool:latest ..
