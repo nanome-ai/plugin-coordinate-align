@@ -3,7 +3,7 @@
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 cd "$parent_path"
 
-container_name='align'
+container_name='align-tool'
 
 existing=$(docker ps -aq -f name=$container_name)
 if [ -n "$existing" ]; then
