@@ -134,8 +134,10 @@ class AlignToolPlugin(AsyncPluginInstance):
             Logs.debug(f'{target.full_name} Starting Position: {target.position._positions}')
             ComplexUtils.align_to(target, reference)
             Logs.debug(f'{target.full_name} Final Position: {target.position._positions}')
+            target.boxed = True
 
-        await self.update_structures_deep(targets)
+        reference.boxed = True
+        await self.update_structures_deep([reference, *targets])
         self.send_notification(NotificationTypes.success, "Complexes aligned!")
         Logs.message("Alignment Completed.")
 
