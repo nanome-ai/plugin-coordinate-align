@@ -1,7 +1,8 @@
 name: Deploy to DEV.
 on:
   push:
-    branches: [master]
+    branches: [github-actions]
+
 jobs:
   build:
     name: Deploy to Dev
@@ -19,5 +20,5 @@ jobs:
           git fetch
           git pull
           cd docker
-          ./docker/build.sh
+          ./build.sh
           ./deploy.sh
