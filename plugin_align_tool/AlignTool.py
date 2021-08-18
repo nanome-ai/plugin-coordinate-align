@@ -21,42 +21,22 @@ class AlignMenu:
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
 
-    def render(self, complex_list, default_values=False):
+    def render(self, complex_list):
         """Populate complex dropdowns with complexes.
 
         complex_list: List of shallow complexes
-        default_values: bool. If True, we want to update selected values in dropdown
         """
         self._menu.enabled = True
-        default_reference = None
-        default_target = None
 
-        if default_values and len(complex_list) >= 1:
-            default_reference = complex_list[0]
-
-        if default_values and len(complex_list) >= 2:
-            default_target = complex_list[1]
-
-        # Set reference complex buttons, and set default if available
+        # Set up reference complex buttons
         btn_list = self.create_complex_btns(complex_list)
         for ln_btn in btn_list:
             btn = ln_btn.get_children()[0].get_content()
             btn.register_pressed_callback(self.reference_complex_clicked)
         self.list_reference.items = btn_list
 
-        if default_reference:
-            for item in self.list_reference.items:
-                if item.get_children()[0].get_content().complex_index == default_reference.index:
-                    item.selected = True
-                    break
-
-        # Set target complex buttons, and set default if available
+        # Set up target complex buttons
         self.list_targets.items = self.create_complex_btns(complex_list)
-        if default_target:
-            for item in self.list_targets.items:
-                if item.get_children()[0].get_content().complex_index == default_target.index:
-                    item.selected = True
-                    break
         self.plugin.update_menu(self._menu)
 
     def reference_complex_clicked(self, clicked_btn):
@@ -160,7 +140,7 @@ class AlignToolPlugin(AsyncPluginInstance):
     @async_callback
     async def on_complex_added(self):
         complexes = await self.request_complex_list()
-        await self.menu.render(complexes, default_values=True)
+        await self.menu.render(complexes)
 
     @async_callback
     async def on_complex_removed(self):
