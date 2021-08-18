@@ -77,12 +77,20 @@ class AlignMenu:
             item.get_children()[0].get_content().complex_index
             for item in self.list_reference.items
             if item.get_children()[0].get_content().selected
-        ]))
+        ]), None)
+        if not reference_index:
+            self.plugin.send_notification(NotificationTypes.error, "Please Select a Reference complex")
+            return
+
         target_indices = [
             item.get_children()[0].get_content().complex_index
             for item in self.list_targets.items
             if item.get_children()[0].get_content().selected
         ]
+        if not target_indices:
+            self.plugin.send_notification(NotificationTypes.error, "Please Select one or more target complexes.")
+            return
+
 
         default_text = "Align"
         processing_text = "Aligning..."
