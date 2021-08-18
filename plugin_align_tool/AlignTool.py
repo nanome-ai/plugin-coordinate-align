@@ -21,42 +21,22 @@ class AlignMenu:
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
 
-    def render(self, complex_list, default_values=False):
+    def render(self, complex_list):
         """Populate complex dropdowns with complexes.
 
         complex_list: List of shallow complexes
-        default_values: bool. If True, we want to update selected values in dropdown
         """
         self._menu.enabled = True
-        default_reference = None
-        default_target = None
 
-        if default_values and len(complex_list) >= 1:
-            default_reference = complex_list[0]
-
-        if default_values and len(complex_list) >= 2:
-            default_target = complex_list[1]
-
-        # Set reference complex buttons, and set default if available
+        # Set up reference complex buttons
         btn_list = self.create_complex_btns(complex_list)
         for ln_btn in btn_list:
             btn = ln_btn.get_children()[0].get_content()
             btn.register_pressed_callback(self.reference_complex_clicked)
         self.list_reference.items = btn_list
 
-        if default_reference:
-            for item in self.list_reference.items:
-                if item.get_children()[0].get_content().complex_index == default_reference.index:
-                    item.selected = True
-                    break
-
-        # Set target complex buttons, and set default if available
+        # Set up target complex buttons
         self.list_targets.items = self.create_complex_btns(complex_list)
-        if default_target:
-            for item in self.list_targets.items:
-                if item.get_children()[0].get_content().complex_index == default_target.index:
-                    item.selected = True
-                    break
         self.plugin.update_menu(self._menu)
 
     def reference_complex_clicked(self, clicked_btn):
@@ -97,12 +77,20 @@ class AlignMenu:
             item.get_children()[0].get_content().complex_index
             for item in self.list_reference.items
             if item.get_children()[0].get_content().selected
-        ]))
+        ]), None)
+        if not reference_index:
+            self.plugin.send_notification(NotificationTypes.error, "Please Select a Reference complex")
+            return
+
         target_indices = [
             item.get_children()[0].get_content().complex_index
             for item in self.list_targets.items
             if item.get_children()[0].get_content().selected
         ]
+        if not target_indices:
+            self.plugin.send_notification(NotificationTypes.error, "Please Select one or more target complexes.")
+            return
+
 
         default_text = "Align"
         processing_text = "Aligning..."
@@ -110,9 +98,21 @@ class AlignMenu:
         self.btn_submit.unusable = True
         self.plugin.update_content(self.btn_submit)
         await self.plugin.align_complexes(reference_index, target_indices)
+
+        # Deselect buttons after alignment done
+        self.deselect_buttons(self.list_reference)
+        self.deselect_buttons(self.list_targets)
+        # Reset submit button text
         self.btn_submit.text.value.set_all(default_text)
         self.btn_submit.unusable = False
         self.plugin.update_content(self.btn_submit)
+
+    def deselect_buttons(self, ui_list):
+        """Deselect all buttons in the provided UIList object."""
+        btn_list = [item.get_children()[0].get_content() for item in ui_list.items]
+        for btn in btn_list:
+            btn.selected = False
+        self.plugin.update_content(ui_list)
 
 
 class AlignToolPlugin(AsyncPluginInstance):
@@ -126,16 +126,18 @@ class AlignToolPlugin(AsyncPluginInstance):
     async def align_complexes(self, reference_index, target_indices):
         Logs.message("Starting Alignment.")
         complexes = await self.request_complexes([reference_index, *target_indices])
-        reference = complexes[0]
-        targets = complexes[1:]
+        reference = next(comp for comp in complexes if comp.index == reference_index)
+        targets = [comp for comp in complexes if comp.index != reference_index]
 
         for target in targets:
             Logs.debug(f"Aligning {target.full_name} to {reference.full_name}")
             Logs.debug(f'{target.full_name} Starting Position: {target.position._positions}')
             ComplexUtils.align_to(target, reference)
             Logs.debug(f'{target.full_name} Final Position: {target.position._positions}')
+            target.boxed = True
 
-        await self.update_structures_deep(targets)
+        reference.boxed = True
+        await self.update_structures_deep([reference, *targets])
         self.send_notification(NotificationTypes.success, "Complexes aligned!")
         Logs.message("Alignment Completed.")
 
@@ -146,7 +148,7 @@ class AlignToolPlugin(AsyncPluginInstance):
     @async_callback
     async def on_complex_added(self):
         complexes = await self.request_complex_list()
-        await self.menu.render(complexes, default_values=True)
+        await self.menu.render(complexes)
 
     @async_callback
     async def on_complex_removed(self):
