@@ -1,7 +1,7 @@
 name: Deploy to DEV.
 on:
   push:
-    branches: [github-actions]
+    branches: [master]
 jobs:
   build:
     name: Deploy to Dev
@@ -15,7 +15,7 @@ jobs:
         key: ${{ secrets.PLUGINS_HQ_SECRET_KEY }}
         port: ${{ secrets.PLUGINS_HQ_PORT }}
         script: |
-          cd ${{ secrets.PLUGINS_HQ_DEV_PATH }}
+          cd ${{ secrets.PLUGINS_HQ_DIRECTORY }}
           git fetch
           git pull
           cd docker
