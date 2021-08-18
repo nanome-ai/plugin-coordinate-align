@@ -10,6 +10,7 @@ jobs:
     steps:
     - name: Fetch, Pull, Deploy
       uses: appleboy/ssh-action@master
+
       with:
         host: ${{ secrets.PLUGINS_HQ_HOST }}
         username: ${{ secrets.PLUGINS_HQ_USERNAME }}
