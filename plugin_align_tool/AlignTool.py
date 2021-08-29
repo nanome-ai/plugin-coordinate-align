@@ -91,7 +91,6 @@ class AlignMenu:
             self.plugin.send_notification(NotificationTypes.error, "Please Select one or more target complexes.")
             return
 
-
         default_text = "Align"
         processing_text = "Aligning..."
         self.btn_submit.text.value.set_all(processing_text)
