@@ -15,7 +15,6 @@ class AlignMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
-
         self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
         self.dd_targets = self._menu.root.find_node('dd_targets').get_content()
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
