@@ -19,7 +19,10 @@ jobs:
         && pip install bump2version
         && chmod +x ./version.sh
         && ./version.sh patch
+        && current_version=$(cat plugin_align_tool/__init__.py | grep __version__ | cut -d'=' -f2 | xargs)
         && git push origin master
+        && git push origin v$current_version
+
   deploy:
     name: Deploy to Dev
     runs-on: ubuntu-latest
