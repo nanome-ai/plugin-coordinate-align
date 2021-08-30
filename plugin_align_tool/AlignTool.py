@@ -116,7 +116,13 @@ class AlignMenu:
         # Reset submit button text
         self.btn_submit.text.value.set_all(default_text)
         self.btn_submit.unusable = False
+        self.btn_submit.selected = False
         self.plugin.update_content(self.btn_submit)
+        
+        self.dd_targets.permanent_title = 'None'
+        self.dd_targets.use_permanent_title = False
+        self.dd_targets._selected_items = []
+        self.plugin.update_content(self.dd_targets)
 
     def deselect_buttons(self, dropdown):
         """Deselect all buttons in the provided UIList object."""
