@@ -7,7 +7,7 @@ from os import path
 
 
 BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
-MENU_PATH = path.join(BASE_PATH, 'newMenu.json')
+MENU_PATH = path.join(BASE_PATH, 'menu.json')
 
 
 class AlignMenu:
@@ -58,6 +58,8 @@ class AlignMenu:
         for ddi in selected_items:
             ddi.selected = True
 
+        dropdown.permanent_title = ','.join([ddi.name for ddi in selected_items])
+        dropdown.use_permanent_title = len(selected_items) > 1
         self.plugin.update_content(dropdown)
 
     def reference_complex_clicked(self, dropdown, ddi):
