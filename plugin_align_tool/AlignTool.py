@@ -118,7 +118,7 @@ class AlignMenu:
         self.btn_submit.unusable = False
         self.btn_submit.selected = False
         self.plugin.update_content(self.btn_submit)
-        
+
         self.dd_targets.permanent_title = 'None'
         self.dd_targets.use_permanent_title = False
         self.dd_targets._selected_items = []
