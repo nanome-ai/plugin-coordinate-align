@@ -47,12 +47,11 @@ class AlignMenu:
         selected_items = dropdown._selected_items
         if item.selected and item not in selected_items:
             selected_items.append(item)
-        
+
         for ddi in selected_items:
             ddi.selected = True
-        
-        self.plugin.update_content(dropdown)
 
+        self.plugin.update_content(dropdown)
 
     def reference_complex_clicked(self, dropdown, ddi):
         # Only one reference complex can be selected at a time.
