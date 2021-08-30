@@ -50,8 +50,11 @@ class AlignMenu:
             dropdown._selected_items = []
 
         selected_items = dropdown._selected_items
-        if item.selected and item not in selected_items:
+        if item not in selected_items:
             selected_items.append(item)
+        else:
+            selected_items.remove(item)
+            item.selected = False
 
         for ddi in selected_items:
             ddi.selected = True
