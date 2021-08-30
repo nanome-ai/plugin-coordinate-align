@@ -1,13 +1,13 @@
 import nanome
 from nanome.api import AsyncPluginInstance
-from nanome.api.ui import DropdownItem, LayoutNode
+from nanome.api.ui import DropdownItem
 from nanome.util import async_callback, Logs, ComplexUtils
 from nanome.util.enums import NotificationTypes
 from os import path
 
 
 BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
-MENU_PATH = path.join(BASE_PATH, 'menu.json')
+MENU_PATH = path.join(BASE_PATH, 'newMenu.json')
 
 
 class AlignMenu:
@@ -16,8 +16,8 @@ class AlignMenu:
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
 
-        self.list_reference = self._menu.root.find_node('list_reference').get_content()
-        self.list_targets = self._menu.root.find_node('list_targets').get_content()
+        self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
+        self.dd_targets = self._menu.root.find_node('dd_targets').get_content()
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.btn_submit.register_pressed_callback(self.submit_form)
 
@@ -29,38 +29,28 @@ class AlignMenu:
         self._menu.enabled = True
 
         # Set up reference complex buttons
-        btn_list = self.create_complex_btns(complex_list)
-        for ln_btn in btn_list:
-            btn = ln_btn.get_children()[0].get_content()
-            btn.register_pressed_callback(self.reference_complex_clicked)
-        self.list_reference.items = btn_list
+        self.dd_reference.items = self.create_complex_dropdown_items(complex_list)
+        self.dd_reference.register_item_clicked_callback(self.reference_complex_clicked)
 
         # Set up target complex buttons
-        self.list_targets.items = self.create_complex_btns(complex_list)
+        self.dd_targets.items = self.create_complex_dropdown_items(complex_list)
         self.plugin.update_menu(self._menu)
 
-    def reference_complex_clicked(self, clicked_btn):
+    def reference_complex_clicked(self, dropdown, ddi):
         # Only one reference complex can be selected at a time.
-        if clicked_btn.selected:
-            for ln_btn in self.list_reference.items:
-                btn = ln_btn.get_children()[0].get_content()
-                if btn.selected and btn._content_id != clicked_btn._content_id:
-                    btn.selected = False
-        self.plugin.update_content(self.list_reference)
+        if ddi.selected:
+            for item in self.dd_reference.items:
+                if item.selected and item.name != ddi.name:
+                    item.selected = False
+        self.plugin.update_content(self.dd_reference)
 
-    def create_complex_btns(self, complex_list):
-        btn_list = []
+    def create_complex_dropdown_items(self, complex_list):
+        ddi_list = []
         for comp in complex_list:
-            # Slightly annoying, but to fix z-index issues,
-            # we need to add two layoutnodes around the button
-            ln = LayoutNode()
-            ln2 = ln.create_child_node()
-            ln2.forward_dist = 0.004
-            btn = ln2.add_new_toggle_switch(comp.full_name)
-            btn.complex_index = comp.index
-            ln2.set_content(btn)
-            btn_list.append(ln)
-        return btn_list
+            ddi = DropdownItem(comp.full_name)
+            ddi.complex_index = comp.index
+            ddi_list.append(ddi)
+        return ddi_list
 
     def create_dropdown_items(self, complexes):
         """Generate list of dropdown items corresponding to provided complexes."""
@@ -74,19 +64,13 @@ class AlignMenu:
     @async_callback
     async def submit_form(self, btn):
         reference_index = next(iter([
-            item.get_children()[0].get_content().complex_index
-            for item in self.list_reference.items
-            if item.get_children()[0].get_content().selected
+            item.complex_index for item in self.dd_reference.items if item.selected
         ]), None)
         if not reference_index:
             self.plugin.send_notification(NotificationTypes.error, "Please Select a Reference complex")
             return
 
-        target_indices = [
-            item.get_children()[0].get_content().complex_index
-            for item in self.list_targets.items
-            if item.get_children()[0].get_content().selected
-        ]
+        target_indices = [item.complex_index for item in self.dd_targets.items if item.selected]
         if not target_indices:
             self.plugin.send_notification(NotificationTypes.error, "Please Select one or more target complexes.")
             return
@@ -99,19 +83,18 @@ class AlignMenu:
         await self.plugin.align_complexes(reference_index, target_indices)
 
         # Deselect buttons after alignment done
-        self.deselect_buttons(self.list_reference)
-        self.deselect_buttons(self.list_targets)
+        self.deselect_buttons(self.dd_reference)
+        self.deselect_buttons(self.dd_targets)
         # Reset submit button text
         self.btn_submit.text.value.set_all(default_text)
         self.btn_submit.unusable = False
         self.plugin.update_content(self.btn_submit)
 
-    def deselect_buttons(self, ui_list):
+    def deselect_buttons(self, dropdown):
         """Deselect all buttons in the provided UIList object."""
-        btn_list = [item.get_children()[0].get_content() for item in ui_list.items]
-        for btn in btn_list:
-            btn.selected = False
-        self.plugin.update_content(ui_list)
+        for item in dropdown.items:
+            item.selected = False
+        self.plugin.update_content(dropdown)
 
 
 class AlignToolPlugin(AsyncPluginInstance):
