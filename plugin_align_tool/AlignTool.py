@@ -43,7 +43,7 @@ class AlignMenu:
     def multi_select_dropdown(self, dropdown, item):
         if not hasattr(dropdown, '_selected_items'):
             dropdown._selected_items = []
-        
+
         selected_items = dropdown._selected_items
         if item.selected and item not in selected_items:
             selected_items.append(item)
@@ -148,9 +148,9 @@ class AlignToolPlugin(AsyncPluginInstance):
     @async_callback
     async def on_complex_added(self):
         complexes = await self.request_complex_list()
-        await self.menu.render(complexes)
+        self.menu.render(complexes)
 
     @async_callback
     async def on_complex_removed(self):
         complexes = await self.request_complex_list()
-        await self.menu.render(complexes)
+        self.menu.render(complexes)
