@@ -19,6 +19,10 @@ class AlignMenu:
         self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
         self.dd_targets = self._menu.root.find_node('dd_targets').get_content()
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
+        self.ln_recent = self._menu.root.find_node('Recent')
+        self.lbl_recent = self._menu.root.find_node('lbl_recent').get_content()
+        self.btn_undo_recent = self._menu.root.find_node('btn_undo_recent').get_content()
+        self.btn_undo_recent.register_pressed_callback(self.undo_recent_alignment)
         self.btn_submit.register_pressed_callback(self.submit_form)
 
     def render(self, complex_list):
@@ -28,6 +32,7 @@ class AlignMenu:
         """
         self._menu.enabled = True
 
+        self.complexes = complex_list
         # Set up reference complex buttons
         self.dd_reference.items = self.create_complex_dropdown_items(complex_list)
         self.dd_reference.register_item_clicked_callback(self.reference_complex_clicked)
@@ -99,6 +104,8 @@ class AlignMenu:
         self.plugin.update_content(self.btn_submit)
         await self.plugin.align_complexes(reference_index, target_indices)
 
+        self.setup_recents(reference_index, target_indices)
+
         # Deselect buttons after alignment done
         self.deselect_buttons(self.dd_reference)
         self.deselect_buttons(self.dd_targets)
@@ -112,6 +119,31 @@ class AlignMenu:
         for item in dropdown.items:
             item.selected = False
         self.plugin.update_content(dropdown)
+
+    def setup_recents(self, reference_index, target_indices):
+        """Write label describing the most recent alignment done."""
+        self.ln_recent.enabled = True
+        # get complex_names.
+        reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
+        target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
+        label = f"{reference_name} > {', '.join(target_names)}"
+        self.lbl_recent.text_value = label
+        self.plugin.update_node(self.ln_recent)
+        # Set up undo btn with most recent changes.
+        self.btn_undo_recent.aligned_indices = [reference_index, *target_indices]
+
+    def undo_recent_alignment(self, btn):
+        comps_to_undo = [
+            comp for comp in self.complexes if comp.index in btn.aligned_indices
+        ]
+        for comp in comps_to_undo:
+            ComplexUtils.reset_transform(comp)
+
+        label = self.lbl_recent.text_value
+        Logs.message(f'Alignment {label} undone')
+        self.lbl_recent.text_value = ''
+        self.ln_recent.enabled = False
+        self.plugin.update_node(self.ln_recent)
 
 
 class AlignToolPlugin(AsyncPluginInstance):
@@ -136,6 +168,8 @@ class AlignToolPlugin(AsyncPluginInstance):
             target.boxed = True
 
         reference.boxed = True
+        # make sure complex list on menu contains most recent complexes
+        self.menu.complexes = complexes
         await self.update_structures_deep([reference, *targets])
         self.send_notification(NotificationTypes.success, "Complexes aligned!")
         Logs.message("Alignment Completed.")
