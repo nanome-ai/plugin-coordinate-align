@@ -34,7 +34,25 @@ class AlignMenu:
 
         # Set up target complex buttons
         self.dd_targets.items = self.create_complex_dropdown_items(complex_list)
+        for item in self.dd_targets.items:
+            item.close_on_selected = False
+
+        self.dd_targets.register_item_clicked_callback(self.multi_select_dropdown)
         self.plugin.update_menu(self._menu)
+
+    def multi_select_dropdown(self, dropdown, item):
+        if not hasattr(dropdown, '_selected_items'):
+            dropdown._selected_items = []
+        
+        selected_items = dropdown._selected_items
+        if item.selected and item not in selected_items:
+            selected_items.append(item)
+        
+        for ddi in selected_items:
+            ddi.selected = True
+        
+        self.plugin.update_content(dropdown)
+
 
     def reference_complex_clicked(self, dropdown, ddi):
         # Only one reference complex can be selected at a time.
