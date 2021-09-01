@@ -8,6 +8,44 @@ from os import path
 
 BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
 MENU_PATH = path.join(BASE_PATH, 'menu.json')
+CONFIRMATION_MENU_PATH = path.join(BASE_PATH, 'confirmation_menu.json')
+
+
+class ConfirmMenu:
+    """Menu that pops up after successful align."""
+
+    def __init__(self, plugin):
+        self.plugin = plugin
+        self._menu = nanome.ui.Menu.io.from_json(CONFIRMATION_MENU_PATH)
+        self._menu.index = 220  # arbitrary
+
+    @property
+    def lbl_message(self):
+        return self._menu.root.find_node('lbl_message').get_content()
+
+    @property
+    def btn_ok(self):
+        return self._menu.root.find_node('btn_ok').get_content()
+
+    @classmethod
+    def create(cls, plugin):
+        menu = cls(plugin)
+        menu.btn_ok.register_pressed_callback(menu.close_menu)
+        return menu
+
+    def render(self, align_string):
+        # Render menu from json again, so that placeholders can be replaced
+        self.update_label(align_string)
+        self._menu.enabled = True
+        self.plugin.update_menu(self._menu)
+    
+    def update_label(self, align_string):
+        message = self.lbl_message.text_value
+        self.lbl_message.text_value = message.replace('{{align_string}}', align_string)
+
+    def close_menu(self, btn):
+        self._menu.enabled = False
+        self.plugin.update_menu(self._menu)
 
 
 class AlignMenu:
@@ -87,6 +125,10 @@ class AlignMenu:
             complex_ddis.append(ddi)
         return complex_ddis
 
+    @staticmethod
+    def alignment_string(reference_name, target_names):
+        return f"{reference_name} > {', '.join(target_names)}"
+
     @async_callback
     async def submit_form(self, btn):
         reference_index = next(iter([
@@ -124,6 +166,13 @@ class AlignMenu:
         self.dd_targets._selected_items = []
         self.plugin.update_content(self.dd_targets)
 
+        # Create and render confirmation menu
+        reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
+        target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
+        align_string = self.alignment_string(reference_name, target_names)
+        self.confirm_menu = ConfirmMenu.create(self.plugin)
+        self.confirm_menu.render(align_string)
+
     def deselect_buttons(self, dropdown):
         """Deselect all buttons in the provided UIList object."""
         for item in dropdown.items:
@@ -136,7 +185,9 @@ class AlignMenu:
         # get complex_names.
         reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
         target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
-        label = f"{reference_name} > {', '.join(target_names)}"
+        
+        label = self.alignment_string(reference_name, target_names)
+        
         self.lbl_recent.text_value = label
         self.plugin.update_node(self.ln_recent)
         # Set up undo btn with most recent changes.
