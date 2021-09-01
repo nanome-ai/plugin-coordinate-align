@@ -17,7 +17,7 @@ class ConfirmMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(CONFIRMATION_MENU_PATH)
-        self._menu.index = 2342353423
+        self._menu.index = 220
 
     @property
     def lbl_message(self):
@@ -27,12 +27,14 @@ class ConfirmMenu:
     def btn_ok(self):
         return self._menu.root.find_node('btn_ok').get_content()
 
+    @classmethod
+    def create(cls, plugin):
+        menu = cls(plugin)
+        menu.btn_ok.register_pressed_callback(menu.close_menu)
+        return menu
+
     def render(self, align_string):
         # Render menu from json again, so that placeholders can be replaced
-        self._menu = nanome.ui.Menu.io.from_json(CONFIRMATION_MENU_PATH)
-        self.btn_ok.register_pressed_callback(self.close_menu)
-        self._menu.index = 220
-
         self.update_label(align_string)
         self._menu.enabled = True
         self.plugin.update_menu(self._menu)
@@ -164,11 +166,11 @@ class AlignMenu:
         self.dd_targets._selected_items = []
         self.plugin.update_content(self.dd_targets)
 
-        # Open confirmation menu
+        # Create and render confirmation menu
         reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
         target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
         align_string = self.alignment_string(reference_name, target_names)
-        self.confirm_menu = ConfirmMenu(self.plugin)
+        self.confirm_menu = ConfirmMenu.create(self.plugin)
         self.confirm_menu.render(align_string)
 
     def deselect_buttons(self, dropdown):
