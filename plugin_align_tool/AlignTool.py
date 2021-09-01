@@ -17,17 +17,22 @@ class ConfirmMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(CONFIRMATION_MENU_PATH)
-        self.btn_ok = self._menu.root.find_node('btn_ok').get_content()
-        self.btn_ok.register_pressed_callback(self.close_menu)
         self._menu.index = 2342353423
 
     @property
     def lbl_message(self):
         return self._menu.root.find_node('lbl_message').get_content()
 
+    @property
+    def btn_ok(self):
+        return self._menu.root.find_node('btn_ok').get_content()
+
     def render(self, align_string):
         # Render menu from json again, so that placeholders can be replaced
         self._menu = nanome.ui.Menu.io.from_json(CONFIRMATION_MENU_PATH)
+        self.btn_ok.register_pressed_callback(self.close_menu)
+        self._menu.index = 220
+
         self.update_label(align_string)
         self._menu.enabled = True
         self.plugin.update_menu(self._menu)
