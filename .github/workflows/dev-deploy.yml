@@ -41,4 +41,4 @@ jobs:
           git pull
           cd docker
           ./build.sh
-          ./deploy.sh
+          ./redeploy.sh

@@ -17,7 +17,7 @@ class ConfirmMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(CONFIRMATION_MENU_PATH)
-        self._menu.index = 220
+        self._menu.index = 220  # arbitrary
 
     @property
     def lbl_message(self):
