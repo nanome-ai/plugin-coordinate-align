@@ -33,9 +33,9 @@ class ConfirmMenu:
         menu.btn_ok.register_pressed_callback(menu.close_menu)
         return menu
 
-    def render(self, reference_comp, target_comps):
+    def render(self, reference_name, target_names):
         # Render menu from json again, so that placeholders can be replaced
-        self.update_label(reference_comp, target_comps)
+        self.update_label(reference_name, target_names)
         self._menu.enabled = True
         self.plugin.update_menu(self._menu)
     
