@@ -9,7 +9,7 @@ from os import path
 BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
 MENU_PATH = path.join(BASE_PATH, 'menu.json')
 CONFIRMATION_MENU_PATH = path.join(BASE_PATH, 'confirmation_menu.json')
-
+BACK_ICON = path.join(BASE_PATH, 'BackIcon.png')
 
 class ConfirmMenu:
     """Menu that pops up after successful align."""
@@ -95,7 +95,8 @@ class AlignMenu:
         for item in self.dd_targets.items:
             item.close_on_selected = False
 
-        self.plugin.update_content(self.dd_targets, self.dd_reference)
+        self.btn_undo_recent.icon.value.set_all(BACK_ICON)
+        self.plugin.update_content(self.dd_targets, self.dd_reference, self.btn_undo_recent)
 
 
     def multi_select_dropdown(self, dropdown, item):
