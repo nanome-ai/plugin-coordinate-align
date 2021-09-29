@@ -144,7 +144,10 @@ class AlignMenu:
 
     @staticmethod
     def alignment_string(reference_name, target_names):
-        return f"{reference_name} > {', '.join(target_names)}"
+        target_names = ', '.join(target_names)
+        if len(target_names) > 40:
+            target_names = f'{target_names[:37]}...'
+        return f"Ref: {reference_name} - Aligned: {target_names}"
 
     @async_callback
     async def submit_form(self, btn):
