@@ -189,7 +189,6 @@ class AlignMenu:
         # Create and render confirmation menu
         reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
         target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
-        # align_string = self.alignment_string(reference_name, target_names)
         self.confirm_menu = ConfirmMenu.create(self.plugin)
         self.confirm_menu.render(reference_name, target_names)
 
