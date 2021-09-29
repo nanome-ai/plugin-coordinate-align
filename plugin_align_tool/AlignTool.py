@@ -33,15 +33,25 @@ class ConfirmMenu:
         menu.btn_ok.register_pressed_callback(menu.close_menu)
         return menu
 
-    def render(self, align_string):
+    def render(self, reference_comp, target_comps):
         # Render menu from json again, so that placeholders can be replaced
-        self.update_label(align_string)
+        self.update_label(reference_comp, target_comps)
         self._menu.enabled = True
         self.plugin.update_menu(self._menu)
     
-    def update_label(self, align_string):
+    def update_label(self, reference_name, target_names):
         message = self.lbl_message.text_value
-        self.lbl_message.text_value = message.replace('{{align_string}}', align_string)
+        reference_name = reference_name
+        target_names = ', '.join(target_names)
+
+        replacement_dict = {
+            "{{reference_complex}}": reference_name,
+            "{{target_complexes}}": target_names
+        }
+        new_message = message
+        for key, value in replacement_dict.items():
+            new_message = new_message.replace(key, value)   
+        self.lbl_message.text_value = new_message
 
     def close_menu(self, btn):
         self._menu.enabled = False
@@ -175,9 +185,9 @@ class AlignMenu:
         # Create and render confirmation menu
         reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
         target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
-        align_string = self.alignment_string(reference_name, target_names)
+        # align_string = self.alignment_string(reference_name, target_names)
         self.confirm_menu = ConfirmMenu.create(self.plugin)
-        self.confirm_menu.render(align_string)
+        self.confirm_menu.render(reference_name, target_names)
 
     def deselect_buttons(self, dropdown):
         """Deselect all buttons in the provided UIList object."""
@@ -218,9 +228,9 @@ class AlignToolPlugin(AsyncPluginInstance):
     @async_callback
     async def on_run(self):
         self.menu = AlignMenu(self)
-        self.menu.enable()
         complex_list = await self.request_complex_list()
         self.menu.render(complex_list)
+        self.menu.enable()
 
     async def align_complexes(self, reference_index, target_indices):
         Logs.message("Starting Alignment.")
