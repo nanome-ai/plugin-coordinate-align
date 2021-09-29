@@ -53,8 +53,13 @@ class AlignMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
+        
         self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
+        self.dd_reference.register_item_clicked_callback(self.reference_complex_clicked)
+        
         self.dd_targets = self._menu.root.find_node('dd_targets').get_content()
+        self.dd_targets.register_item_clicked_callback(self.multi_select_dropdown)
+        
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.ln_recent = self._menu.root.find_node('Recent')
         self.lbl_recent = self._menu.root.find_node('lbl_recent').get_content()
@@ -62,25 +67,26 @@ class AlignMenu:
         self.btn_undo_recent.register_pressed_callback(self.undo_recent_alignment)
         self.btn_submit.register_pressed_callback(self.submit_form)
 
+    def enable(self):
+        self._menu.enabled = True
+        self.plugin.update_menu(self._menu)
+
     def render(self, complex_list):
         """Populate complex dropdowns with complexes.
 
         complex_list: List of shallow complexes
         """
-        self._menu.enabled = True
-
         self.complexes = complex_list
         # Set up reference complex buttons
         self.dd_reference.items = self.create_complex_dropdown_items(complex_list)
-        self.dd_reference.register_item_clicked_callback(self.reference_complex_clicked)
 
         # Set up target complex buttons
         self.dd_targets.items = self.create_complex_dropdown_items(complex_list)
         for item in self.dd_targets.items:
             item.close_on_selected = False
 
-        self.dd_targets.register_item_clicked_callback(self.multi_select_dropdown)
-        self.plugin.update_menu(self._menu)
+        self.plugin.update_content(self.dd_targets, self.dd_reference)
+
 
     def multi_select_dropdown(self, dropdown, item):
         if not hasattr(dropdown, '_selected_items'):
@@ -212,6 +218,7 @@ class AlignToolPlugin(AsyncPluginInstance):
     @async_callback
     async def on_run(self):
         self.menu = AlignMenu(self)
+        self.menu.enable()
         complex_list = await self.request_complex_list()
         self.menu.render(complex_list)
 
