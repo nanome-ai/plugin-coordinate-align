@@ -73,6 +73,7 @@ class AlignMenu:
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.ln_recent = self._menu.root.find_node('Recent')
         self.lbl_recent = self._menu.root.find_node('lbl_recent').get_content()
+        self.btn_recent = self._menu.root.find_node('btn_recent').get_content()
         self.btn_undo_recent = self._menu.root.find_node('btn_undo_recent').get_content()
         self.btn_undo_recent.register_pressed_callback(self.undo_recent_alignment)
         self.btn_submit.register_pressed_callback(self.submit_form)
@@ -145,8 +146,6 @@ class AlignMenu:
     @staticmethod
     def alignment_string(reference_name, target_names):
         target_names = ', '.join(target_names)
-        if len(target_names) > 40:
-            target_names = f'{target_names[:37]}...'
         return f"Ref: {reference_name} - Aligned: {target_names}"
 
     @async_callback
@@ -206,7 +205,13 @@ class AlignMenu:
         target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
         
         label = self.alignment_string(reference_name, target_names)
-        
+        if len(label) > 40:
+            full_label = label
+            label = f'{label[:37]}...'
+            self.btn_recent.tooltip.content = full_label
+        else:
+            self.btn_recent.tooltip.content = ''
+
         self.lbl_recent.text_value = label
         self.plugin.update_node(self.ln_recent)
         # Set up undo btn with most recent changes.
@@ -246,9 +251,9 @@ class AlignToolPlugin(AsyncPluginInstance):
             Logs.debug(f'{target.full_name} Starting Position: {target.position._positions}')
             ComplexUtils.align_to(target, reference)
             Logs.debug(f'{target.full_name} Final Position: {target.position._positions}')
-            target.boxed = True
+            # target.boxed = True
 
-        reference.boxed = True
+        # reference.boxed = True
         # make sure complex list on menu contains most recent complexes
         self.menu.complexes = complexes
         await self.update_structures_deep([reference, *targets])
