@@ -17,14 +17,6 @@ $ ./build.sh
 $ ./deploy.sh -a <plugin_server_address> [optional args]
 ```
 
-### Optional arguments:
-
-- `-x arg`
-
-  Example argument documentation
-
-**TODO**: Add any optional argument documentation here, or remove section entirely.
-
 ## Development
 
 To run Align Tool with autoreload:
