@@ -223,7 +223,7 @@ class AlignMenu:
         ]
         for comp in comps_to_undo:
             ComplexUtils.reset_transform(comp)
-
+        self.plugin.update_structures_shallow([comp.index for comp in comps_to_undo])
         label = self.lbl_recent.text_value
         Logs.message(f'Alignment {label} undone')
         self.lbl_recent.text_value = ''
