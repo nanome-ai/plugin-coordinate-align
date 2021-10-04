@@ -233,9 +233,11 @@ class AlignMenu:
 
 class AlignToolPlugin(AsyncPluginInstance):
 
+    def start(self):
+        self.menu = AlignMenu(self)
+
     @async_callback
     async def on_run(self):
-        self.menu = AlignMenu(self)
         complex_list = await self.request_complex_list()
         self.menu.render(complex_list)
         self.menu.enable()
@@ -257,7 +259,6 @@ class AlignToolPlugin(AsyncPluginInstance):
         # make sure complex list on menu contains most recent complexes
         self.menu.complexes = complexes
         await self.update_structures_deep([reference, *targets])
-        self.send_notification(NotificationTypes.success, "Complexes aligned!")
         Logs.message("Alignment Completed.")
 
     @async_callback
