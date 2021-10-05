@@ -1,5 +1,6 @@
 import nanome
 from nanome.api import AsyncPluginInstance
+from nanome.api.structure import Complex
 from nanome.api.ui import DropdownItem
 from nanome.util import async_callback, Logs, ComplexUtils
 from nanome.util.enums import NotificationTypes
@@ -10,6 +11,7 @@ BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
 MENU_PATH = path.join(BASE_PATH, 'menu.json')
 CONFIRMATION_MENU_PATH = path.join(BASE_PATH, 'confirmation_menu.json')
 BACK_ICON = path.join(BASE_PATH, 'BackIcon.png')
+
 
 class ConfirmMenu:
     """Menu that pops up after successful align."""
@@ -38,7 +40,7 @@ class ConfirmMenu:
         self.update_label(reference_name, target_names)
         self._menu.enabled = True
         self.plugin.update_menu(self._menu)
-    
+
     def update_label(self, reference_name, target_names):
         message = self.lbl_message.text_value
         reference_name = reference_name
@@ -50,7 +52,7 @@ class ConfirmMenu:
         }
         new_message = message
         for key, value in replacement_dict.items():
-            new_message = new_message.replace(key, value)   
+            new_message = new_message.replace(key, value)
         self.lbl_message.text_value = new_message
 
     def close_menu(self, btn):
@@ -63,13 +65,13 @@ class AlignMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
-        
+
         self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
         self.dd_reference.register_item_clicked_callback(self.reference_complex_clicked)
-        
+
         self.dd_targets = self._menu.root.find_node('dd_targets').get_content()
         self.dd_targets.register_item_clicked_callback(self.multi_select_dropdown)
-        
+
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.ln_recent = self._menu.root.find_node('Recent')
         self.lbl_recent = self._menu.root.find_node('lbl_recent').get_content()
@@ -98,7 +100,6 @@ class AlignMenu:
 
         self.btn_undo_recent.icon.value.set_all(BACK_ICON)
         self.plugin.update_content(self.dd_targets, self.dd_reference, self.btn_undo_recent)
-
 
     def multi_select_dropdown(self, dropdown, item):
         if not hasattr(dropdown, '_selected_items'):
@@ -203,7 +204,7 @@ class AlignMenu:
         # get complex_names.
         reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
         target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
-        
+
         label = self.alignment_string(reference_name, target_names)
         if len(label) > 40:
             full_label = label
@@ -215,15 +216,21 @@ class AlignMenu:
         self.lbl_recent.text_value = label
         self.plugin.update_node(self.ln_recent)
         # Set up undo btn with most recent changes.
-        self.btn_undo_recent.aligned_indices = [reference_index, *target_indices]
+        self.btn_undo_recent.previous_target_indices = target_indices
 
-    def undo_recent_alignment(self, btn):
-        comps_to_undo = [
-            comp for comp in self.complexes if comp.index in btn.aligned_indices
-        ]
+    @async_callback
+    async def undo_recent_alignment(self, btn):
+        comps_to_undo = [comp for comp in self.complexes if comp.index in btn.previous_target_indices]
         for comp in comps_to_undo:
+            # to undo alignment, use old_position + rotation as "reference_complex" to reset origin
+            fake_reference = Complex()
+            fake_reference.position = comp.old_position
+            fake_reference.rotation = comp.old_rotation
+            ComplexUtils.align_to(comp, fake_reference)
+            # reset position and rotation
             ComplexUtils.reset_transform(comp)
 
+        await self.plugin.update_structures_deep(comps_to_undo)
         label = self.lbl_recent.text_value
         Logs.message(f'Alignment {label} undone')
         self.lbl_recent.text_value = ''
@@ -233,9 +240,11 @@ class AlignMenu:
 
 class AlignToolPlugin(AsyncPluginInstance):
 
+    def start(self):
+        self.menu = AlignMenu(self)
+
     @async_callback
     async def on_run(self):
-        self.menu = AlignMenu(self)
         complex_list = await self.request_complex_list()
         self.menu.render(complex_list)
         self.menu.enable()
@@ -251,13 +260,11 @@ class AlignToolPlugin(AsyncPluginInstance):
             Logs.debug(f'{target.full_name} Starting Position: {target.position._positions}')
             ComplexUtils.align_to(target, reference)
             Logs.debug(f'{target.full_name} Final Position: {target.position._positions}')
-            # target.boxed = True
 
         # reference.boxed = True
         # make sure complex list on menu contains most recent complexes
         self.menu.complexes = complexes
-        await self.update_structures_deep([reference, *targets])
-        self.send_notification(NotificationTypes.success, "Complexes aligned!")
+        await self.update_structures_deep([*targets])
         Logs.message("Alignment Completed.")
 
     @async_callback
