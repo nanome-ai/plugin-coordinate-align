@@ -169,7 +169,7 @@ class AlignMenu:
         self.plugin.update_content(self.btn_submit)
         await self.plugin.align_complexes(reference_index, target_indices)
 
-        # self.setup_recents(reference_index, target_indices)
+        self.setup_recents(reference_index, target_indices)
 
         # Deselect buttons after alignment done
         self.deselect_buttons(self.dd_reference)
@@ -225,8 +225,13 @@ class AlignMenu:
         comps_to_undo = [comp for comp in self.complexes if comp.index in btn.previous_target_indices]
 
         for comp in comps_to_undo:
+            # to undo alignment, use old_position + rotation as "reference_complex" to reset origin
+            fake_complex = nanome.api.structure.Complex()
+            fake_complex.position = comp.old_position
+            fake_complex.rotation = comp.old_rotation
+            ComplexUtils.align_to(comp, fake_complex)
+            # reset position and rotation
             ComplexUtils.reset_transform(comp)
-            ComplexUtils.align_to(comp, reference_complex)
 
         await self.plugin.update_structures_deep(comps_to_undo)
         label = self.lbl_recent.text_value
