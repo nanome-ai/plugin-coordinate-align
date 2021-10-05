@@ -1,5 +1,6 @@
 import nanome
 from nanome.api import AsyncPluginInstance
+from nanome.api.structure import Complex
 from nanome.api.ui import DropdownItem
 from nanome.util import async_callback, Logs, ComplexUtils
 from nanome.util.enums import NotificationTypes
@@ -222,7 +223,7 @@ class AlignMenu:
         comps_to_undo = [comp for comp in self.complexes if comp.index in btn.previous_target_indices]
         for comp in comps_to_undo:
             # to undo alignment, use old_position + rotation as "reference_complex" to reset origin
-            fake_reference = nanome.api.structure.Complex()
+            fake_reference = Complex()
             fake_reference.position = comp.old_position
             fake_reference.rotation = comp.old_rotation
             ComplexUtils.align_to(comp, fake_reference)
