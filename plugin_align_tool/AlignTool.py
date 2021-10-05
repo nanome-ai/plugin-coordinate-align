@@ -215,20 +215,17 @@ class AlignMenu:
         self.lbl_recent.text_value = label
         self.plugin.update_node(self.ln_recent)
         # Set up undo btn with most recent changes.
-        self.btn_undo_recent.previous_reference_index = reference_index
         self.btn_undo_recent.previous_target_indices = target_indices
 
     @async_callback
     async def undo_recent_alignment(self, btn):
-        reference_complex = next(comp for comp in self.complexes if comp.index == btn.previous_reference_index)
         comps_to_undo = [comp for comp in self.complexes if comp.index in btn.previous_target_indices]
-
         for comp in comps_to_undo:
             # to undo alignment, use old_position + rotation as "reference_complex" to reset origin
-            fake_complex = nanome.api.structure.Complex()
-            fake_complex.position = comp.old_position
-            fake_complex.rotation = comp.old_rotation
-            ComplexUtils.align_to(comp, fake_complex)
+            fake_reference = nanome.api.structure.Complex()
+            fake_reference.position = comp.old_position
+            fake_reference.rotation = comp.old_rotation
+            ComplexUtils.align_to(comp, fake_reference)
             # reset position and rotation
             ComplexUtils.reset_transform(comp)
 
