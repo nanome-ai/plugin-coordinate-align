@@ -11,6 +11,7 @@ MENU_PATH = path.join(BASE_PATH, 'menu.json')
 CONFIRMATION_MENU_PATH = path.join(BASE_PATH, 'confirmation_menu.json')
 BACK_ICON = path.join(BASE_PATH, 'BackIcon.png')
 
+
 class ConfirmMenu:
     """Menu that pops up after successful align."""
 
@@ -38,7 +39,7 @@ class ConfirmMenu:
         self.update_label(reference_name, target_names)
         self._menu.enabled = True
         self.plugin.update_menu(self._menu)
-    
+
     def update_label(self, reference_name, target_names):
         message = self.lbl_message.text_value
         reference_name = reference_name
@@ -50,7 +51,7 @@ class ConfirmMenu:
         }
         new_message = message
         for key, value in replacement_dict.items():
-            new_message = new_message.replace(key, value)   
+            new_message = new_message.replace(key, value)
         self.lbl_message.text_value = new_message
 
     def close_menu(self, btn):
@@ -63,13 +64,13 @@ class AlignMenu:
     def __init__(self, plugin):
         self.plugin = plugin
         self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
-        
+
         self.dd_reference = self._menu.root.find_node('dd_reference').get_content()
         self.dd_reference.register_item_clicked_callback(self.reference_complex_clicked)
-        
+
         self.dd_targets = self._menu.root.find_node('dd_targets').get_content()
         self.dd_targets.register_item_clicked_callback(self.multi_select_dropdown)
-        
+
         self.btn_submit = self._menu.root.find_node('btn_align').get_content()
         self.ln_recent = self._menu.root.find_node('Recent')
         self.lbl_recent = self._menu.root.find_node('lbl_recent').get_content()
@@ -98,7 +99,6 @@ class AlignMenu:
 
         self.btn_undo_recent.icon.value.set_all(BACK_ICON)
         self.plugin.update_content(self.dd_targets, self.dd_reference, self.btn_undo_recent)
-
 
     def multi_select_dropdown(self, dropdown, item):
         if not hasattr(dropdown, '_selected_items'):
@@ -203,7 +203,7 @@ class AlignMenu:
         # get complex_names.
         reference_name = next(comp.full_name for comp in self.complexes if comp.index == reference_index)
         target_names = [comp.full_name for comp in self.complexes if comp.index in target_indices]
-        
+
         label = self.alignment_string(reference_name, target_names)
         if len(label) > 40:
             full_label = label
@@ -263,7 +263,7 @@ class AlignToolPlugin(AsyncPluginInstance):
         # reference.boxed = True
         # make sure complex list on menu contains most recent complexes
         self.menu.complexes = complexes
-        await self.update_structures_deep([ *targets])
+        await self.update_structures_deep([*targets])
         Logs.message("Alignment Completed.")
 
     @async_callback
