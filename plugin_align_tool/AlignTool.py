@@ -220,7 +220,6 @@ class AlignMenu:
 
     @async_callback
     async def undo_recent_alignment(self, btn):
-        # TODO: Get this working.
         reference_complex = next(comp for comp in self.complexes if comp.index == btn.previous_reference_index)
         comps_to_undo = [comp for comp in self.complexes if comp.index in btn.previous_target_indices]
 
