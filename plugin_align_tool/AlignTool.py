@@ -169,7 +169,7 @@ class AlignMenu:
         self.plugin.update_content(self.btn_submit)
         await self.plugin.align_complexes(reference_index, target_indices)
 
-        self.setup_recents(reference_index, target_indices)
+        # self.setup_recents(reference_index, target_indices)
 
         # Deselect buttons after alignment done
         self.deselect_buttons(self.dd_reference)
@@ -215,15 +215,20 @@ class AlignMenu:
         self.lbl_recent.text_value = label
         self.plugin.update_node(self.ln_recent)
         # Set up undo btn with most recent changes.
-        self.btn_undo_recent.aligned_indices = [reference_index, *target_indices]
+        self.btn_undo_recent.previous_reference_index = reference_index
+        self.btn_undo_recent.previous_target_indices = target_indices
 
-    def undo_recent_alignment(self, btn):
-        comps_to_undo = [
-            comp for comp in self.complexes if comp.index in btn.aligned_indices
-        ]
+    @async_callback
+    async def undo_recent_alignment(self, btn):
+        # TODO: Get this working.
+        reference_complex = next(comp for comp in self.complexes if comp.index == btn.previous_reference_index)
+        comps_to_undo = [comp for comp in self.complexes if comp.index in btn.previous_target_indices]
+
         for comp in comps_to_undo:
             ComplexUtils.reset_transform(comp)
-        self.plugin.update_structures_shallow([comp.index for comp in comps_to_undo])
+            ComplexUtils.align_to(comp, reference_complex)
+
+        await self.plugin.update_structures_deep(comps_to_undo)
         label = self.lbl_recent.text_value
         Logs.message(f'Alignment {label} undone')
         self.lbl_recent.text_value = ''
@@ -253,12 +258,11 @@ class AlignToolPlugin(AsyncPluginInstance):
             Logs.debug(f'{target.full_name} Starting Position: {target.position._positions}')
             ComplexUtils.align_to(target, reference)
             Logs.debug(f'{target.full_name} Final Position: {target.position._positions}')
-            # target.boxed = True
 
         # reference.boxed = True
         # make sure complex list on menu contains most recent complexes
         self.menu.complexes = complexes
-        await self.update_structures_deep([reference, *targets])
+        await self.update_structures_deep([ *targets])
         Logs.message("Alignment Completed.")
 
     @async_callback
