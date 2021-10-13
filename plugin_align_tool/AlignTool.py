@@ -259,6 +259,7 @@ class AlignToolPlugin(AsyncPluginInstance):
             Logs.debug(f"Aligning {target.full_name} to {reference.full_name}")
             Logs.debug(f'{target.full_name} Starting Position: {target.position._positions}')
             ComplexUtils.align_to(target, reference)
+            target.set_surface_needs_redraw()
             Logs.debug(f'{target.full_name} Final Position: {target.position._positions}')
 
         # reference.boxed = True
