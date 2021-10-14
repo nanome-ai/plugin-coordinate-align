@@ -229,6 +229,7 @@ class AlignMenu:
             ComplexUtils.align_to(comp, fake_reference)
             # reset position and rotation
             ComplexUtils.reset_transform(comp)
+            comp.set_surface_needs_redraw()
 
         await self.plugin.update_structures_deep(comps_to_undo)
         label = self.lbl_recent.text_value
