@@ -16,7 +16,7 @@ jobs:
         with:
           key: ${{ secrets.SSH_SECRET_KEY }}
           config: ${{ secrets.SSH_CONFIG}}
-          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
       - run: |
           git remote add subnet githubactions-rnd:coordinate-align.git
           git checkout subnet-deploy
