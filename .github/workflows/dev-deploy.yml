@@ -18,7 +18,7 @@ jobs:
           key: ${{ secrets.SSH_SECRET_KEY }}
           config: ${{ secrets.SSH_CONFIG}}
           known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
-      - run: |
-          git remote add subnet githubactions-rnd:coordinate-align.git
-          git checkout subnet-deploy
-          git push -u subnet subnet-deploy
+      - name: Push to Dev environment
+        run: |
+          git remote add dev dev-environment:coordinate-align.git
+          git push -u dev subnet-deploy
