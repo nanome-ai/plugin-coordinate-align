@@ -10,7 +10,7 @@ from os import path
 BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
 MENU_PATH = path.join(BASE_PATH, 'menu.json')
 CONFIRMATION_MENU_PATH = path.join(BASE_PATH, 'confirmation_menu.json')
-BACK_ICON = path.join(BASE_PATH, 'BackIcon.png')
+BACK_ICON = path.join(BASE_PATH, 'assets', 'BackIcon.png')
 
 
 class ConfirmMenu:
