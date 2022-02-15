@@ -239,7 +239,7 @@ class AlignMenu:
         self.plugin.update_node(self.ln_recent)
 
 
-class AlignToolPlugin(AsyncPluginInstance):
+class CoordinateAlignPlugin(AsyncPluginInstance):
 
     def start(self):
         self.menu = AlignMenu(self)
