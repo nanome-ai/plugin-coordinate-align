@@ -1,5 +1,5 @@
 from nanome.api import Plugin
-from plugin_align_tool.AlignTool import AlignToolPlugin
+from plugin_coordinate_align.CoordinateAlign import CoordinateAlignPlugin
 
 
 if __name__ == "__main__":
@@ -8,4 +8,4 @@ if __name__ == "__main__":
     description = 'Override the 3D coordinates of a complex to be relative to a reference complex'
     category = 'Alignment'
     has_advanced = False
-    Plugin.setup(name, description, category, has_advanced, AlignToolPlugin)
+    Plugin.setup(name, description, category, has_advanced, CoordinateAlignPlugin)

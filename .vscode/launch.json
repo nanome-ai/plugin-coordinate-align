@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "run.py",
             "console": "integratedTerminal",
-            "args": ["-r", "-v", "-a", "${env:NTS_HOST}", "-p", "${env:NTS_PORT}", "-n", "[wip]-align"],
+            "args": ["-v", "-n", "[wip]-coordinate-align"],
             "justMyCode": false
         }
     ]

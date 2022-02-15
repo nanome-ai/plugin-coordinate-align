@@ -10,7 +10,7 @@ from os import path
 BASE_PATH = path.dirname(f'{path.realpath(__file__)}')
 MENU_PATH = path.join(BASE_PATH, 'menu.json')
 CONFIRMATION_MENU_PATH = path.join(BASE_PATH, 'confirmation_menu.json')
-BACK_ICON = path.join(BASE_PATH, 'BackIcon.png')
+BACK_ICON = path.join(BASE_PATH, 'assets', 'BackIcon.png')
 
 
 class ConfirmMenu:
@@ -239,7 +239,7 @@ class AlignMenu:
         self.plugin.update_node(self.ln_recent)
 
 
-class AlignToolPlugin(AsyncPluginInstance):
+class CoordinateAlignPlugin(AsyncPluginInstance):
 
     def start(self):
         self.menu = AlignMenu(self)
