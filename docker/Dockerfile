@@ -8,6 +8,6 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY run.py .
-ADD plugin_align_tool plugin_align_tool
+ADD plugin_coordinate_align plugin_coordinate_align
 
 CMD python run.py ${ARGS}
