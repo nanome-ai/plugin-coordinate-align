@@ -1,5 +1,5 @@
 from nanome.api import Plugin
-from plugin_coordinate_align.CoordinateAlign import CoordinateAlignPlugin
+from plugin.CoordinateAlign import CoordinateAlignPlugin
 
 
 if __name__ == "__main__":
