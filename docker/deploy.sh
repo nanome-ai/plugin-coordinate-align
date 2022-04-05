@@ -18,5 +18,6 @@ chmod +x redeploy.sh
 docker run -d \
 --name $container_name \
 --restart unless-stopped \
+-h $(hostname)-$container_name \
 -e ARGS="$*" \
 $container_name
