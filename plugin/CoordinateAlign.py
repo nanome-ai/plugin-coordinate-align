@@ -270,15 +270,6 @@ class CoordinateAlignPlugin(AsyncPluginInstance):
         Logs.message("Alignment Completed.")
 
     @async_callback
-    async def on_complex_list_updated(self, complexes):
-        self.menu.render(complexes)
-
-    @async_callback
-    async def on_complex_added(self):
-        complexes = await self.request_complex_list()
-        self.menu.render(complexes)
-
-    @async_callback
-    async def on_complex_removed(self):
+    async def on_complex_list_changed(self):
         complexes = await self.request_complex_list()
         self.menu.render(complexes)
