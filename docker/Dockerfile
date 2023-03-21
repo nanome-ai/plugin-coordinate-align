@@ -9,4 +9,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
+RUN rm -rf  /opt/conda/lib/python3.7/site-packages/nanome
+COPY nanome  /opt/conda/lib/python3.7/site-packages/nanome
+
 CMD python run.py ${ARGS}
