@@ -1,8 +1,9 @@
+import math
 import nanome
-from nanome.api import AsyncPluginInstance
+from nanome.api import AsyncPluginInstance, shapes
 from nanome.api.structure import Complex
 from nanome.api.ui import DropdownItem
-from nanome.util import async_callback, Logs, ComplexUtils
+from nanome.util import async_callback, Logs, ComplexUtils, enums, Color, Vector3
 from nanome.util.enums import NotificationTypes
 from os import path
 
@@ -241,14 +242,17 @@ class AlignMenu:
 
 class CoordinateAlignPlugin(AsyncPluginInstance):
 
-    def start(self):
-        self.menu = AlignMenu(self)
+    @async_callback
+    async def start(self):
+        # self.menu = AlignMenu(self)
+        await self.draw_graphs()
 
     @async_callback
     async def on_run(self):
-        complex_list = await self.request_complex_list()
-        self.menu.render(complex_list)
-        self.menu.enable()
+        pass
+        # complex_list = await self.request_complex_list()
+        # self.menu.render(complex_list)
+        # self.menu.enable()
 
     async def align_complexes(self, reference_index, target_indices):
         Logs.message("Starting Alignment.")
@@ -273,3 +277,64 @@ class CoordinateAlignPlugin(AsyncPluginInstance):
     async def on_complex_list_changed(self):
         complexes = await self.request_complex_list()
         self.menu.render(complexes)
+
+    async def draw_graphs(self):
+        comps = await self.request_complex_list()
+        deep_comps = await self.request_complexes([comp.index for comp in comps])
+        for comp in deep_comps:
+            await self.render_graph(comp)
+        
+        ligand = deep_comps[1]
+        for atom in ligand.atoms:
+            atom.labeled = True
+            atom.label_text = f'({round(atom.position.x, 1)}, {round(atom.position.y, 1)}, {round(atom.position.z, 1)})'
+        await self.update_structures_deep(deep_comps)
+
+    async def render_graph(self, comp):
+        x_min = math.floor(min([atom.position.x for atom in comp.atoms]))
+        x_max = math.ceil(max([atom.position.x for atom in comp.atoms]))
+        x_start = Vector3(min(x_min, 0), 0, 0)
+        x_end = Vector3(max(x_max, 0), 0, 0)
+        x_axis = self.draw_axis(x_start, x_end, comp)
+        x_labels = self.draw_labels(x_axis)
+        
+        y_min = math.floor(min([atom.position.y for atom in comp.atoms]))
+        y_max = math.ceil(max([atom.position.y for atom in comp.atoms]))
+        y_start = Vector3(0, min(y_min, 0), 0)
+        y_end = Vector3(0, max(y_max, 0), 0)
+        y_axis = self.draw_axis(y_start, y_end, comp)
+        y_labels = self.draw_labels(y_axis)
+        
+        z_min = math.floor(min([atom.position.z for atom in comp.atoms]))
+        z_max = math.ceil(max([atom.position.z for atom in comp.atoms]))
+        z_start = Vector3(0, 0, min(z_min, 0))
+        z_end = Vector3(0, 0, max(z_max, 0))
+        z_axis = self.draw_axis(z_start, z_end, comp)
+        z_labels = self.draw_labels(z_axis)
+        await shapes.Shape.upload_multiple([x_axis, y_axis, z_axis, *x_labels, *y_labels, *z_labels])
+        
+    def draw_axis(self, start: Vector3, end: Vector3, comp):
+        # Draw line between spheres.
+        axis = shapes.Line()
+        axis.thickness = 0.5
+        axis.dash_distance = 0
+        axis.color = Color.White()
+        anchor1, anchor2 = axis.anchors
+        anchor1.anchor_type = enums.ShapeAnchorType.Complex
+        anchor1.target = comp.index
+        anchor1.local_offset = start
+        anchor2.anchor_type = enums.ShapeAnchorType.Complex
+        anchor2.target = comp.index
+        anchor2.local_offset = end
+        return axis
+    
+    def draw_labels(self, axis_line):
+        """Add labels to axis line."""
+        anchor1, anchor2 = axis_line.anchors
+        label1 = shapes.Label()
+        label1.text = f'({int(anchor1.local_offset.x)}, {int(anchor1.local_offset.y)}, {int(anchor1.local_offset.z)})'
+        label1.anchors = [anchor1]
+        label2 = shapes.Label()
+        label2.text = f'({int(anchor2.local_offset.x)}, {int(anchor2.local_offset.y)}, {int(anchor2.local_offset.z)})'
+        label2.anchors = [anchor2]
+        return [label1, label2]
