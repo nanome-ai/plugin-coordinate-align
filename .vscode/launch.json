@@ -8,10 +8,31 @@
             "name": "run.py",
             "type": "python",
             "request": "launch",
-            "program": "run.py",
+            "program": "${workspaceFolder}/run.py",
             "console": "integratedTerminal",
-            "args": ["-v", "-n", "[wip]-coordinate-align"],
-            "justMyCode": false
+            "envFile": "${workspaceFolder}/../.env.dev",
+            "env": {
+                "PLUGIN_NAME": "[wip]-coords",
+                "PLUGIN_VERBOSE": "true"
+            },
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}",
+            // "python": "${command:python.interpreterPath}",
+        },
+        {
+            "name": "Docker: Python - General",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run: debug",
+            "python": {
+                "pathMappings": [
+                    {
+                        "localRoot": "${workspaceFolder}",
+                        "remoteRoot": "/app"
+                    }
+                ],
+                "projectType": "general"
+            }
         }
     ]
 }

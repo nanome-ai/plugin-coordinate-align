@@ -1,19 +1,53 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-      {
-        "label": "autopep8 current file",
-        "type": "process",
-        "command": "${config:python.formatting.autopep8Path}",
-        "args": [
-          "--ignore",
-          "E501",
-          "--in-place",
-          "${file}"
-        ],
-        "problemMatcher": []
-      }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "[wip] plugin container",
+			"type": "process",
+			"group": "build",
+			"command": "docker-compose",
+			"args": [
+				"run",
+				"--rm",
+				"-d",
+				"plugin",
+				"/bin/bash"
+			]
+		},
+		{
+			"type": "docker-build",
+			"label": "docker-build",
+			"platform": "python",
+			"dockerBuild": {
+				"tag": "coordinate-align:debug",
+				"dockerfile": "${workspaceFolder}/docker/Dockerfile",
+				"context": "${workspaceFolder}",
+				"pull": true
+			}
+		},
+		{
+			"type": "docker-run",
+			"label": "docker-run: debug",
+			"dependsOn": [
+				"docker-build"
+			],
+			"dockerRun": {
+                "image": "coordinate-align:debug",
+                "envFiles": ["${workspaceFolder}/../.env.dev"],
+                "env": {
+                    "PLUGIN_NAME": "[wip]-chem-inter",
+                    "PLUGIN_VERBOSE": "True",
+                },
+                "volumes": [
+                    {
+                        "localPath": "${workspaceFolder}",
+                        "containerPath": "/app"
+                    }
+                ],
+            },
+            "python": {
+              "file": "run.py"
+            }
+		}
+	]
 }
